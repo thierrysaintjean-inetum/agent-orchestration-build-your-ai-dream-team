@@ -1,0 +1,11 @@
+{
+  "projects": [
+    {"name": "Atlas Customer Portal", "owner": "Nina Patel", "status": "On track", "recentActivity": "Checkout review completed; the team is preparing the next release candidate.", "priority": "High", "summary": "A simpler self-service experience for customers, from account setup through support."},
+    {"name": "Northstar Analytics", "owner": "Marcus Chen", "status": "In progress", "recentActivity": "The first reporting views are ready for stakeholder feedback.", "priority": "Medium", "summary": "Bring product and engagement insights together in one dependable workspace."},
+    {"name": "Beacon Design System", "owner": "Amara Okafor", "status": "At risk", "recentActivity": "Form components are awaiting accessibility review before adoption.", "priority": "High", "summary": "Shared interface foundations that help teams ship consistent, accessible experiences."},
+    {"name": "Fieldnote Mobile", "owner": "Leo Martin", "status": "In progress", "recentActivity": "Offline sync testing is underway with the field operations group.", "priority": "Medium", "summary": "A mobile companion for capturing work notes and updates while away from a desk."},
+    {"name": "Greenline Operations", "owner": "Sofia Reyes", "status": "On track", "recentActivity": "The pilot schedule has been shared with regional leads.", "priority": "Low", "summary": "Make recurring operations easier to coordinate across teams and locations."},
+    {"name": "Horizon Onboarding", "owner": "Ethan Brooks", "status": "Planning", "recentActivity": "Discovery notes are being consolidated into the initial project scope.", "priority": "Medium", "summary": "A guided start for new customers, with clear next steps and helpful resources."},
+    {"name": "PROJET BIBON", "owner": "Thierry", "status": "Retardé", "recentActivity": "encore en train de chercher des fonds pour lancer le design", "priority": "Très haute !", "summary": "petit projet pour ricaner"}
+  ]
+}

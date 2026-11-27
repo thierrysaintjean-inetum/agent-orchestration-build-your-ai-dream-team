@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7fc">
+    <meta name="description" content="A clear, current view of project ownership, status, activity, and priority.">
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="dashboard">
+      <header class="dashboard-header">
+        <a class="brand" href="index.html" aria-label="Project Pulse home">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span>Project <strong>Pulse</strong></span>
+        </a>
+        <span class="header-note"><span class="live-dot" aria-hidden="true"></span> Team overview</span>
+      </header>
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <p class="eyebrow">A clearer view of what’s moving</p>
+          <h1 id="page-title">Project Pulse<span class="title-period" aria-hidden="true">.</span></h1>
+          <p class="intro-copy">The latest at a glance: who’s leading, what’s changed, and where attention is needed.</p>
+        </section>
+        <section class="projects-section" aria-labelledby="projects-title">
+          <div class="section-heading">
+            <div><p class="eyebrow section-eyebrow">Workspace</p><h2 id="projects-title">Projects</h2></div>
+            <p class="project-count" id="project-count" aria-live="polite">Loading projects…</p>
+          </div>
+          <div id="project-grid" class="project-grid" aria-live="polite" aria-busy="true">
+            <p class="state-message">Gathering the latest project updates…</p>
+          </div>
+          <div id="load-error" class="state-message state-message--error" role="alert" hidden>
+            <p class="state-title">Projects couldn’t be loaded</p>
+            <p id="load-error-detail">Check that project-data.json is available and contains valid project data.</p>
+            <button class="retry-button" id="retry-load" type="button">Try again</button>
+          </div>
+        </section>
+      </main>
+      <footer class="dashboard-footer">
+        <span>Project Pulse</span>
+        <span>Built for better team visibility <span class="footer-heart" aria-hidden="true">♥</span></span>
+      </footer>
+    </div>
+    <script>
+      const projectGrid = document.getElementById("project-grid");
+      const projectCount = document.getElementById("project-count");
+      const loadError = document.getElementById("load-error");
+      const loadErrorDetail = document.getElementById("load-error-detail");
+
+      function readField(project, field, fallback) {
+        if (!project || typeof project !== "object" || Array.isArray(project)) return fallback;
+        const value = project[field];
+        return typeof value === "string" && value.trim() ? value.trim() : fallback;
+      }
+
+      function makeTextElement(tagName, className, text) {
+        const element = document.createElement(tagName);
+        if (className) element.className = className;
+        element.textContent = text;
+        return element;
+      }
+
+      function makeModifier(value) {
+        return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "unknown";
+      }
+
+      function createProjectCard(project, index) {
+        const name = readField(project, "name", `Untitled project ${index + 1}`);
+        const owner = readField(project, "owner", "Not provided");
+        const status = readField(project, "status", "Not provided");
+        const priority = readField(project, "priority", "Not provided");
+        const summary = readField(project, "summary", "No summary provided.");
+        const recentActivity = readField(project, "recentActivity", "No recent activity provided.");
+
+        const article = document.createElement("article");
+        article.className = "project-card";
+        article.setAttribute("aria-labelledby", `project-title-${index}`);
+        const cardHeader = document.createElement("div");
+        cardHeader.className = "project-card__header";
+        const title = makeTextElement("h3", "project-card__title", name);
+        title.id = `project-title-${index}`;
+        const statusBadge = makeTextElement("span", `status-badge status-badge--${makeModifier(status)}`, status);
+        statusBadge.setAttribute("aria-label", `Status: ${status}`);
+        cardHeader.append(title, statusBadge);
+
+        const summaryElement = makeTextElement("p", "project-card__summary", summary);
+        const meta = document.createElement("dl");
+        meta.className = "project-card__meta";
+        const ownerGroup = document.createElement("div");
+        ownerGroup.className = "meta-item";
+        ownerGroup.append(makeTextElement("dt", "", "Owner"), makeTextElement("dd", "", owner));
+        const priorityGroup = document.createElement("div");
+        priorityGroup.className = "meta-item";
+        priorityGroup.append(makeTextElement("dt", "", "Priority"), makeTextElement("dd", `priority priority--${makeModifier(priority)}`, priority));
+        meta.append(ownerGroup, priorityGroup);
+
+        const activity = document.createElement("div");
+        activity.className = "project-card__activity";
+        activity.append(makeTextElement("h4", "activity-label", "Recent activity"), makeTextElement("p", "", recentActivity));
+        article.append(cardHeader, summaryElement, meta, activity);
+        return article;
+      }
+
+      function showError(message) {
+        projectGrid.replaceChildren();
+        projectGrid.hidden = true;
+        projectGrid.setAttribute("aria-busy", "false");
+        projectCount.textContent = "Unavailable";
+        loadErrorDetail.textContent = message;
+        loadError.hidden = false;
+      }
+
+      async function loadProjects() {
+        loadError.hidden = true;
+        projectGrid.hidden = false;
+        projectGrid.setAttribute("aria-busy", "true");
+        projectCount.textContent = "Loading projects…";
+        projectGrid.replaceChildren(makeTextElement("p", "state-message", "Gathering the latest project updates…"));
+        try {
+          const response = await fetch("project-data.json", { cache: "no-store" });
+          if (!response.ok) throw new Error(`The project data request failed (${response.status} ${response.statusText}).`);
+          let data;
+          try { data = await response.json(); }
+          catch { throw new Error("The project data file is not valid JSON."); }
+          if (!data || !Array.isArray(data.projects)) throw new Error("The project data must contain a top-level projects array.");
+          projectGrid.replaceChildren();
+          projectGrid.setAttribute("aria-busy", "false");
+          if (data.projects.length === 0) {
+            projectCount.textContent = "0 projects";
+            projectGrid.append(makeTextElement("p", "state-message state-message--empty", "No projects to show yet. Add a project to project-data.json to get started."));
+            return;
+          }
+          data.projects.forEach((project, index) => projectGrid.append(createProjectCard(project, index)));
+          projectCount.textContent = `${data.projects.length} ${data.projects.length === 1 ? "project" : "projects"}`;
+        } catch (error) {
+          showError(error instanceof Error ? error.message : "An unexpected error occurred while loading projects.");
+        }
+      }
+
+      document.getElementById("retry-load").addEventListener("click", loadProjects);
+      loadProjects();
+    </script>
+  </body>
+</html>
